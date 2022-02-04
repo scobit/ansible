@@ -1,97 +1,51 @@
-1-Ansible - Автоконфигурирование для DevOps - Полный Курс на Простом Языке
+ansible -i hosts all -m setup | grep ansible_os_family
 
-Automation Configuration management Tool
+ansible-playbook add-ansbile-user.yml -K
 
-система автоматизации конфигурации и управления серверами
+ssh-copy-id -i ~/.ssh/id_rsa.pub remote-host
 
-скрипт в формате yaml
-
-удалённое управление серверами
-
-Pull - на управляемых серверах установлен Agent который делает pull настроек от master
-
-Push - на управляемых сервера ничего не установлено, Master делает push настроек
-
-Альтернатива ansible
-Chef - pull request
-Puppet - pull request
-SaltStack - pull request
-
-playbook
-
-ansible - automation configuration tool
-www.ansible.com
-
-redhat разработчик
-
-лицензия open source
-
-есть платный модуль - tower
-
-Минимальные требования 
-
-Control server - master server
-Linux only (Red Hat, debian, centOS, OS X)
-Python 2.6+ или Python 3.5+
+ssh host
 
 
-Controled servers - managed servers
 
 Linux Admin Username/password или SSH Key и python 2.6+
 Windows Admin Username/password  PowerShell 3.0 и запустить скрипт /ConfigureRemotingForAnsible.ps1
 Этот скрипт включает WInM протокол
 PS3 поддерживает не все команды, желательно иметь PS выше
 
-работа происходит через следующие протоколы и порты
-Linux - ssh
-Windows - WinRM port 5986
+ansible --version
+python --version
+python3 --version
 
-2-Ansible - Установка на Ubuntu и CentOS
-
-docs.ansible.com
-
-т.к. это Open source его можно скомпилировать с нуля
-
-Установка на CentOS
+# Установка на CentOS
 sudo yum install epel-release
 sudo yum install ansible
 
-ansible --version
 
-как проверить наличие установленного python в linux?
-
-Установка на Debian
+# Установка на Debian
 sudo apt-add-repository ppa:ansible/ansible
 sudo apt-get update
 sudo apt-get install ansible
 
 
-3-Ansible - Установка на Amazon Linux через PIP
-
+# Установка на Amazon Linux через PIP
+# минус установки таким способом - не создаётся конфиг файл
 sudo pip install ansible
-
-минус установки таким способом - не создаётся конфиг файл
 
 config file = None
 
 
 ### 4-Ansible - Подключение к серверам LINUX
 
-рекомендуется использовать SSH key - более универсально, надёжно, удобно
-
 cd .ssh
-MobaxTerm
 
 sudo chmod 400 keys
 
 mkdir ansible
 
-inventory or host file - файл со списком серверов к которым мы можем подключиться
-в нём указываются логин, пароль, IP and DNS address, SSH key
-
 Volt система управления паролями
 
-vim hosts.txt
+vim hosts
 [staging_servers]
 linux1 ansible_host=192.168.100.100 ansible_user=dstv ansible_password=MyPassword
 linux2 ansible_host=192.168.100.101 ansible_user=dstv ansible_ssh_private_key_file=/home/.../.ssh/key.pem
@@ -100,21 +54,17 @@ linux2 ansible_host=192.168.100.101 ansible_user=dstv ansible_ssh_private_key_fi
 при первом подключении запрашивается fingerprint
 в ansible всё в модулях
 
-ansible -i hosts.txt all -m ping
+ansible -i hosts all -m ping
+ansible all -m ping
 
-alias in hosts.txt must be uniq
+
+alias in hosts must be uniq
 
 vim ansible.cfg
 
 [defaults]
 host_key_checking = false
-inventory = ./hosts.txt
-
-
-
-ansible all -m ping
-
-
+inventory = ./hosts
 
 
 # To generate an example config file (a "disabled" one with all default settings, commented out):
@@ -124,53 +74,10 @@ ansible all -m ping
 # ansible-config init --disabled -t all > ansible.cfg
  
  
-5-Ansible - Подключение к серверам WINDOWS
 
-1. на master сервере должна быть бибилиотека WinRM
-2. конфигурация host файла
-3. на Windows сервера запустить WinRM
-
-pip install "pywinrm=>0.2.2"
-
-vim hosts
-[windows]
-win2012 ansible_host = 192.168.0.150
-
-[windows:vars]
-ansible_user = user
-ansible_password = password
-ansible_port = 5986
-ansible_connection = winrm
-ansible_winrm_server_cert_validation = ignore
-
-
-https://docs.ansible.com/ansible/2.3/intro_windows.html#windows-system-prep
-
-
-https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
-
-если нужно запустить скрипт на множестве серверов, то используем group policy
-
-apt install python3-pip
-pip install "pywinrm>=0.2.2"
-
-ansible windows_servers -m win_ping
-
-ansible windows_servers -m win_ping --ask-pass
 
 6-Ansible - Правила создания файла Inventory
 
-в строке может быть указан только IP или к примеру DNS
-не обязательно использовать группы
-
-все сервера в invetnroty принадлежат 2 группам - all (все сервера)
-ungrouped - все сервера не объединённые в какую-либу группу
-
-config ansible case sensetive
-
-рекомендуется разделять сервера по группам
-
-группы можно объединять в группы 
 
 [staging_all:children]
 staging_db
@@ -190,7 +97,6 @@ prod_all
 
 vars можно использовать не только к группе, но и объектам типа children
 
-best practice чтобы в Inv file были только адреса, без переменных
 
 # просмотр текущего состояния конфигурации 
 ansible-inventory --list
@@ -678,6 +584,8 @@ failed_when: results.rc == 0
 в main name добавить
 any_errors_fatal: true
 
+
+
 20-Ansible - Хранение Секретов - ansible-vault
 
 ansible-vault create file.txt
@@ -719,6 +627,12 @@ echo -n "password" | ansible-vault encrypt_string
 bestpractice - шифровать все переменные в файле одним и тем же паролем
 
 
+
+
+
+
+
+
 21-Ansible - Dynamic Inventory AWS - Amazon Web Services - ec2.py
 
 AWS
@@ -750,12 +664,5 @@ chmod +x ec2.py
 
 
 
-
-
-
-22-Ansible - Создание ресурсов AWS - Amazon Web Services
-
-ansible doc 
-amazon wev services
 
 
