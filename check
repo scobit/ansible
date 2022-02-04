@@ -1,0 +1,761 @@
+1-Ansible - Автоконфигурирование для DevOps - Полный Курс на Простом Языке
+
+Automation Configuration management Tool
+
+система автоматизации конфигурации и управления серверами
+
+скрипт в формате yaml
+
+удалённое управление серверами
+
+Pull - на управляемых серверах установлен Agent который делает pull настроек от master
+
+Push - на управляемых сервера ничего не установлено, Master делает push настроек
+
+Альтернатива ansible
+Chef - pull request
+Puppet - pull request
+SaltStack - pull request
+
+playbook
+
+ansible - automation configuration tool
+www.ansible.com
+
+redhat разработчик
+
+лицензия open source
+
+есть платный модуль - tower
+
+Минимальные требования 
+
+Control server - master server
+Linux only (Red Hat, debian, centOS, OS X)
+Python 2.6+ или Python 3.5+
+
+
+Controled servers - managed servers
+
+Linux Admin Username/password или SSH Key и python 2.6+
+Windows Admin Username/password  PowerShell 3.0 и запустить скрипт /ConfigureRemotingForAnsible.ps1
+Этот скрипт включает WInM протокол
+PS3 поддерживает не все команды, желательно иметь PS выше
+
+работа происходит через следующие протоколы и порты
+Linux - ssh
+Windows - WinRM port 5986
+
+2-Ansible - Установка на Ubuntu и CentOS
+
+docs.ansible.com
+
+т.к. это Open source его можно скомпилировать с нуля
+
+Установка на CentOS
+sudo yum install epel-release
+sudo yum install ansible
+
+ansible --version
+
+как проверить наличие установленного python в linux?
+
+Установка на Debian
+sudo apt-add-repository ppa:ansible/ansible
+sudo apt-get update
+sudo apt-get install ansible
+
+
+3-Ansible - Установка на Amazon Linux через PIP
+
+sudo pip install ansible
+
+минус установки таким способом - не создаётся конфиг файл
+
+config file = None
+
+
+### 4-Ansible - Подключение к серверам LINUX
+
+рекомендуется использовать SSH key - более универсально, надёжно, удобно
+
+cd .ssh
+MobaxTerm
+
+sudo chmod 400 keys
+
+mkdir ansible
+
+inventory or host file - файл со списком серверов к которым мы можем подключиться
+в нём указываются логин, пароль, IP and DNS address, SSH key
+
+Volt система управления паролями
+
+vim hosts.txt
+[staging_servers]
+linux1 ansible_host=192.168.100.100 ansible_user=dstv ansible_password=MyPassword
+linux2 ansible_host=192.168.100.101 ansible_user=dstv ansible_ssh_private_key_file=/home/.../.ssh/key.pem
+192.168.100.102
+
+при первом подключении запрашивается fingerprint
+в ansible всё в модулях
+
+ansible -i hosts.txt all -m ping
+
+alias in hosts.txt must be uniq
+
+vim ansible.cfg
+
+[defaults]
+host_key_checking = false
+inventory = ./hosts.txt
+
+
+
+ansible all -m ping
+
+
+
+
+# To generate an example config file (a "disabled" one with all default settings, commented out):
+#               $ ansible-config init --disabled > ansible.cfg
+#
+# Also you can now have a more complete file by including existing plugins:
+# ansible-config init --disabled -t all > ansible.cfg
+ 
+ 
+5-Ansible - Подключение к серверам WINDOWS
+
+1. на master сервере должна быть бибилиотека WinRM
+2. конфигурация host файла
+3. на Windows сервера запустить WinRM
+
+pip install "pywinrm=>0.2.2"
+
+vim hosts
+[windows]
+win2012 ansible_host = 192.168.0.150
+
+[windows:vars]
+ansible_user = user
+ansible_password = password
+ansible_port = 5986
+ansible_connection = winrm
+ansible_winrm_server_cert_validation = ignore
+
+
+https://docs.ansible.com/ansible/2.3/intro_windows.html#windows-system-prep
+
+
+https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
+
+если нужно запустить скрипт на множестве серверов, то используем group policy
+
+apt install python3-pip
+pip install "pywinrm>=0.2.2"
+
+ansible windows_servers -m win_ping
+
+ansible windows_servers -m win_ping --ask-pass
+
+6-Ansible - Правила создания файла Inventory
+
+в строке может быть указан только IP или к примеру DNS
+не обязательно использовать группы
+
+все сервера в invetnroty принадлежат 2 группам - all (все сервера)
+ungrouped - все сервера не объединённые в какую-либу группу
+
+config ansible case sensetive
+
+рекомендуется разделять сервера по группам
+
+группы можно объединять в группы 
+
+[staging_all:children]
+staging_db
+staging_web
+staging_app
+
+[prod_all:children]
+prod_db
+prod_web
+prod_app
+
+и подгруппы
+
+[all:children]
+staging_all
+prod_all
+
+vars можно использовать не только к группе, но и объектам типа children
+
+best practice чтобы в Inv file были только адреса, без переменных
+
+# просмотр текущего состояния конфигурации 
+ansible-inventory --list
+ansible-inventory --graph
+
+
+7-Ansible - Запуск Ad-Hoc Комманд
+
+Ad hoc - название команд ansible, если они не в playbook (не в файлике) т.е. просто отдельные команды
+
+
+ansible all -m setup
+
+ansible all -m shell -a "uptime"
+
+# the same as shell but launch not through shell, so no using of env vars | & etc
+ansible all -m command -a "uptime"
+
+otherwise - в противном случае
+
+become in ansible (-b) means become a sudo
+
+# copy file 
+ansible all -m copy -a "src=file.txt dest=home mode=777" -b
+
+если повторно запустить команду, то ничего не произойдёт, файл не будет копироваться
+
+# удаление файла
+ansible all -m file -a "path=/home/file.txt state=absent" -b 
+
+# загрузка из интернета файла
+ansible all -m get_url -a "url=https://etc.com dest=/home" -b
+
+# установка пакета CentOS
+ansible all -m yum -a "name=stress state=installed" -b
+ansible all -m yum -a "name=stress state=latest" -b
+
+# удаление пакета пакета CentOS
+ansible all -m yum -a "name=stress state=removed" -b
+
+# проверка обращения к веб адресу
+ansible all -m uri -a "url=https://etc.com"
+ansible all -m uri -a "url=https://etc.com return_content=yes"
+
+# установка apache 
+ansible all -m yum -a "name=httpd state=latest" -b
+
+# управление сервисами
+ansible all -m service -a "name=httpd state=started enabled=yes" -b
+
+curl http://localhost
+
+# отладка комманд 
+ansible all -m ping -vvvvv
+
+# отобразить все модули в ansible 
+ansible-doc -l
+
+ec2 - Значит речь об амазоне
+
+8-Ansible - Правила Формата YAML
+
+расширение файлов - *.yml
+
+файлы начинаются с 
+---
+
+ - command1
+ - command2
+ 
+ - fruits:
+	- apple
+	- orange
+	- mango
+ - vegetables:
+	- carrots
+	- cucumbers
+ - vasya:
+	nick: vasek
+	position: developer
+	skills:
+		- java
+		- python
+		 
+ - kolya: { nick: kolyan, position: administrator, skills: ['killer', 'cleaner'] }
+ - fruits ['apple', 'orange', 'mango']
+ 
+ - petya:
+	- nick: "petya"krutoi" 
+
+формат yaml - Это пары ключ-значение и листы (списки)
+
+
+9-Ansible - Перенос переменных в group_vars
+
+[staging_server]
+linux1 ansible_host=192.168.100.1 password=secret
+
+[all_server_db:vars]
+db_endpoint=xxx.yyy.com:4151
+owner=vasya
+location="Huston,TX"
+environment=PRODUCTION
+
+best practice чтобы в inventory файле не было переменных или стремиться к минимуму
+
+mkdir group_vars
+внутри создаём файлы с название групп из hosts и копируем туда наши переменные
+файлы должны быть в формате yaml
+---
+ansible_user : dstv
+
+10-Ansible - Первые Playbook
+playbook - набор ад хок комманд, скрипт файл
+
+vim playbook1.yml
+
+---
+- name: Test Connection to my servers
+  host: all
+  become: yes
+ 
+  tasks:
+   - name: Ping my servers
+     ping:
+
+
+ansible-playbook playbook1.yml
+
+
+vim playbook2.yml
+---
+- name: Install default apache web server
+  hosts: all
+  become: yes
+  
+  tasks:
+  - name: install apache web server
+    yum: name=httpd state=latest
+  
+  - name: Start apache and enable it on the every boot
+    service: name=httpd state=started enabled=yes
+	
+vim playbook3.yml
+---
+- name: install apache and upload my web page
+  hosts: all
+  become: yes
+  
+  vars:
+	source_file: ./etc/file.txt
+	dest_file: /var/www/html
+	
+  tasks:
+  - name: install apache server
+    yum: name=httpd state=latest
+
+  name: copy file to server
+  copy: src={{ source_file }} dest={{ dest_file }} mode=0555
+  notify: restart apache
+  
+  - name: start web server and make it enable on boot
+    service: name=httpd state=started enabled=yes
+	
+	
+	handlers:
+	- name: restart apache
+	  service: name=httpd state=restarted
+	  
+	  
+  
+
+ansible all -m yum -a "name=httpd state=absent" -b
+
+
+11-Ansible - Переменные - Debug, Set_fact, Register
+
+name можно опускать в некоторых случаях, но лучше всегда обозначать
+
+debug имеет всего два параметра
+
+
+vim playbook.yml
+
+---
+- name: test playbook
+  hosts: all
+  become: yes
+  
+  vars:
+	message1: hi
+	message2: world
+	secret: ajsdasjdkasd
+	
+  tasks:
+  
+  - name: print secret var
+	debug:
+	var: secret
+	
+	- debug:
+		msg: "secretnot slovo {{ secret }}"
+		
+	- debug:
+		msg: "owner or this server -->{{ owner }}<--"
+		
+	-set_fact: full_message="{{message1 }} {{message2 }} fron {{owner}}"
+	
+	- debug:
+		var: full_message
+		
+	- debug:
+		var: ansible_distibution
+		
+	- shell: uptime
+		register: results
+	- debug:
+		var: results.stdout
+		
+
+12-Ansible - Блоки и Условия – Block-When
+
+ansible all -m ping
+
+ansible all -m setup
+
+!= 
+
+vim playbook.yml
+---
+- 	name: install apache and upload my home page
+	hosts: all
+	become: yes
+
+vars:
+	src_file: ./etc/index.html
+	dest_file: /var/www/html
+	
+tasks: 
+	- name: check and print linux version
+	debug: var = ansible_os_family
+	
+	-name: install apache for redhat
+	yum: name=httpd state=latest
+	when: ansible_os_family == "RedHat"
+	
+	- name: install apache for debian
+	apt: name=apache2 state=latest
+	when: ansible_os_family != "RedHat"
+	
+	- name: copy home page
+	copy: src={{ src_file }} dest:{{ dest_file }} mode = 0555
+#	notify: restart apache
+	
+	-name: start apache for redhat
+	service: name=httpd state=started enabled=yes
+	when: ansible_os_family = "RedHat"
+	
+		-name: start apache for debian
+	service: name=apache2 state=started enabled=yes
+	when: ansible_os_family = "Debian"
+
+  handlers:
+  -name: restart apache redhat 
+  service: name=httpd state=restarted
+  
+  - name: restart apache debian
+  service: name=apache2 state=restarted
+  
+  - block: ##### comment #############
+  ...
+    when: etc
+	
+допускаются вложенные блоки
+
+
+13-Ansible - Циклы – Loop, With_Items, Until, With_fileglob	
+vim playbook.yml
+
+до ansible 2.5 был with_items, в 2.5 И выше работают оба варианта
+
+retries - по умолчанию 3 раза
+
+---
+- name: loop playbook
+  hosts: linux3
+  become: yes
+  
+  tasks: 
+	-name: sat hello to all
+	debug: msg="hello {{ item }}"
+	loop:
+		- "Ivan"
+		- "Alexey"
+		
+		
+ - name: loop until example
+shell: echo -n Z >> file.txt && cat file.txt
+register: output
+delay: 2
+retries: 10 
+until output.stdout.find("ZZZZ") == false
+
+ -name: print final output
+ debug: 
+	var: output.stdout
+	
+	-name: install many packages
+	yum: name = {{ item }} state = installed
+	with_items: 
+		- python
+		- tree
+		- mysql-client
+		
+		
+notify: 
+ - restart apache redhat
+ - restart apache debian
+ 
+
+copy: src= {{ source_folder }}/{{ item }} dest={{ dest_folder }} mode = 0555
+loop: 
+	- "file1"
+	- "file2"
+	
+copy: src={{ item }} dest={{ dest_folder }}
+with_fileglob: "{{ source_folder }}"/*.*"
+
+
+
+14-Ansible - Шаблоны - Jinja Template
+
+
+vim index.j2
+
+<font color="gold">Owner of this server is: {{ owner }}<br>
+server hostname is: {{ ansible_hostname }] <br>
+server os family is: {{ ansible_os_family }} <br>
+ip address of this server is: {{ansible_default_ipv4.address }} <br>
+
+vim playbook.yml
+
+ - name: generate file
+ template: src= {{ source_folder }}/index.j2 dest= {{ dest_folder }}/index.html mode=0555
+ notify:
+  - restart apache debian
+  
+ 15-Ansible - Создание Ролей - Roles
+
+mkdir roles
+
+ansible-galaxy init deploy_apache_web
+
+сформируется дерево каталогов и файлов в roles (пустых)
+
+tree
+
+в это дерево нужно раскидать наш playbook
+
+vim playbook.yml
+
+---
+- name: install apache and upload my home page
+  hosts: all
+  become: yes
+
+	roles:
+	 - { role: deploy_apache_web, when: ansible_system == 'Linux' }
+
+
+
+16-Ansible - Внешние переменные - extra-vars
+
+hosts: "{{ MYHOSTS }}"
+
+ansible-playbook playbook.yml --extra-var "MYHOSTS=STAGING"
+
+--extra-vars
+-e
+
+ansible-playbook playbook.yml --extra-var "MYHOSTS=STAGING owner=DENIS"
+
+переменные переданные в extra-vars имеют высший приоритет перед переменными в playbook
+
+
+17-Ansible - Использование Import, Include
+
+в случае использования модуля file, в пути не существует каких-либо каталогов, они будут созданы
+
+--name: create folder 
+	file:
+	path: /home/secret/folder
+	state: directory
+	mode: 0755
+	
+	-name: create file
+	
+	copy:
+	dest: /home/secret/file.txt
+	content: |
+	qweqweqw ,adas asd
+	asdasdasdasdasd {{ some_var }}
+	
+	- name: create folder
+		include: playbook.yml
+		include*:
+		include_tasks:
+	
+		import: playbook.yml
+	 
+ import - копирует значение из испортируемого плейбука, работает как компилятор
+ 
+ include - выглядит как интерпретатор
+ 
+ name не обязательно писать
+ 
+ 
+ в эти конструкции можно передавать переменные 
+ 
+ include: playbook.yml mytext ="hi"
+ 
+ это типа первая версия роли
+ 
+ 
+ 18-Ansible - Перенаправление выполнения Task из Playbook на определённый сервер - delegate_to
+ 
+ 	copy:
+	dest: /home/secret/file.txt
+	content: |
+	qweqweqw ,adas asd
+	asdasdasdasdasd {{ some_var }}
+	delegate_to: linux3
+	
+	
+-name: unregistered server from load balancer
+shell: echo this server {{ inventory_hostname }} was deregestered from load balancer, node name is {{ ansible_nodename }} >> home/log.txt
+delegate_to: 127.0.0.1
+
+
+-name: reboot my servers
+shell: sleep3 && reboot now
+async: 1
+poll: 0
+
+- name: wait till my server will come up online
+wait_for:
+	host: "{{ inventory_hostname }}"
+	state: started
+	delay: 5
+	timeout: 40
+	delegate_to: 127.0.0.1
+	
+	
+-name: update my database
+shell: echo updating database
+run_once: true
+
+запуститься только на одном сервере, первом по порядку с файла hosts
+
+можно после run_once указать delegate_to
+
+19-Ansible - Перехват и Контроль ошибок
+
+по умолчанию если первый таск завершился с ошибокой, то остальные не будут выполняться
+чтобы игнорировать ошибки в определённом таске, нужно добавить
+
+ignore_errors: yes
+
+
+для сохранения результатов обрабоки на удалённом сервере используем
+
+register: results
+
+ - debug: 
+ var: results
+ 
+ 
+failed_when: "'World' in results.stdout"
+
+rc - when 0 - good
+
+failed_when: results.rc == 0
+
+для прекращения работы при любой ошибки прервать все действия
+в main name добавить
+any_errors_fatal: true
+
+20-Ansible - Хранение Секретов - ansible-vault
+
+ansible-vault create file.txt
+type password
+
+ansible-vault view file.txt
+type password
+
+ansible-vault edit file.txt
+type password
+
+
+ansible-vault rekey file.txt
+type password
+type new password
+
+ansible-vault encrypt playbook.yml
+
+
+ansible-vault decrypt
+
+ansible-playbook playbook.yml --ask-vault-pass
+
+ansible-playbook playbook.yml --vault-password-file mypass.txt
+
+
+ansible-vault encrypt_string
+Ctrl+D twice
+
+ansible-vault encrypt_string --stdin-name "password"
+
+then copy it and paste in playbook file (without "") !vault means for file that this is vault password
+then 
+
+ansible-playbook playbook.yml --ask-vault-pass
+
+echo -n "password" | ansible-vault encrypt_string
+
+bestpractice - шифровать все переменные в файле одним и тем же паролем
+
+
+21-Ansible - Dynamic Inventory AWS - Amazon Web Services - ec2.py
+
+AWS
+
+dynamic inventory file
+
+ansible doc 
+
+working with dynamic inventory
+
+download ex2 external inventory script
+ec2.py
+
+wget https://etc
+
+
+download ec2 ini file
+если его не скачать, то все настройки будут по умолчанию
+
+chmod +x ec2.py 
+
+# generation of inventory file in stdout
+./ec2.py --list
+
+при формированиие файла все - из aws заменяются на _
+
+
+./ec2.py --list --refresh-cache
+
+
+
+
+
+
+22-Ansible - Создание ресурсов AWS - Amazon Web Services
+
+ansible doc 
+amazon wev services
+
+
