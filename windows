@@ -1,0 +1,33 @@
+# Подключение к серверам WINDOWS
+
+1. на master сервере должна быть бибилиотека WinRM
+2. конфигурация host файла
+3. на Windows сервера запустить WinRM
+
+pip install "pywinrm=>0.2.2"
+
+vim hosts
+[windows]
+win2012 ansible_host = 192.168.0.150
+
+[windows:vars]
+ansible_user = user
+ansible_password = password
+ansible_port = 5986
+ansible_connection = winrm
+ansible_winrm_server_cert_validation = ignore
+
+
+https://docs.ansible.com/ansible/2.3/intro_windows.html#windows-system-prep
+
+
+https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
+
+если нужно запустить скрипт на множестве серверов, то используем group policy
+
+apt install python3-pip
+pip install "pywinrm>=0.2.2"
+
+ansible windows_servers -m win_ping
+
+ansible windows_servers -m win_ping --ask-pass
