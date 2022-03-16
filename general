@@ -313,3 +313,14 @@ $ ansible atlanta -a "/sbin/reboot" -f 10 -u username --become [--ask-become-pas
 If you add --ask-become-pass or -K, Ansible prompts you for the password to use for privilege escalation (sudo/su/pfexec/doas/etc).
 
 
+ansible raleigh -m ansible.builtin.shell -a 'echo $TERM'
+
+ansible atlanta -m ansible.builtin.copy -a "src=/etc/hosts dest=/tmp/hosts"
+
+ansible webservers -m ansible.builtin.file -a "dest=/srv/foo/b.txt mode=600 owner=mdehaan group=mdehaan"
+
+ansible webservers -m ansible.builtin.file -a "dest=/path/to/c mode=755 owner=mdehaan group=mdehaan state=directory"
+
+ansible webservers -m ansible.builtin.file -a "dest=/path/to/c state=absent"
+
+
