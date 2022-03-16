@@ -1,0 +1,32 @@
+The order in which a configuration file is located is as follows:
+
+ANSIBLE_CONFIG (environment variable)
+ansible.cfg (per directory)
+~/.ansible.cfg (home directory)
+/etc/ansible/ansible.cfg (global)
+
+The default host inventory file is /etc/ansible/hosts but can be changed via the configuration file (as shown above) or by using the -i option on the ansible command.
+
+ansible all --list-hosts
+
+
+
+vim hosts
+
+[webservers]
+vm2
+vm3
+
+[dbservers]
+vm4
+
+[logservers]
+vm5
+
+[lamp:children]
+webservers
+dbservers
+
+
+ansible web --list-hosts
+
