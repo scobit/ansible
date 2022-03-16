@@ -108,4 +108,164 @@ ansible-playbook playbook.yml --syntax-check
 
 ansible all -m ping -u ubuntu --ask-pass
    	 
-	 
+ansible-doc -l | wc -l
+
+
+vim hosts
+192.168.102.211 vm1 vm1.redhat.lab
+
+
+-k, --ask-pass: ask for connection password
+-K, --ask-become-pass: ask for privilege escalation password
+
+
+ansible all -m copy -a 'src=dvd.repo dest=/etc/yum.repos.d owner=root group=root mode=0644' -b vm5 
+
+ansible-doc copy
+
+
+ansible all -m setup
+
+
+
+
+---
+- hosts: webservers
+ become: yes
+ tasks:
+   - name: install Apache server
+     yum:
+       name: httpd
+       state: latest
+
+   - name: enable and start Apache server
+     service:
+       name: httpd
+       enabled: yes
+       state: started
+
+   - name: open firewall port
+     firewalld:
+       service: http
+       immediate: true
+       permanent: true
+       state: enabled
+
+   - name: create web admin group
+     group:
+       name: web
+       state: present
+
+   - name: create web admin user
+     user:
+       name: webadm
+       comment: "Web Admin"
+       password: $6$rounds=656000$bp7zTIl.nar2WQPS$U5CBB15GHnzBqnhY0r7UX65FrBI6w/w9YcAL2kN9PpDaYQIDY6Bi.CAEL6PRRKUqe2bJYgsayyh9NOP1kUy4w.
+       groups: web
+       append: yes
+
+   - name: set content directory group/permissions 
+     file:
+       path: /var/www/html
+       owner: root
+       group: web
+       state: directory
+       mode: u=rwx,g=rwx,o=rx,g+s
+
+   - name: create default page content
+     copy:
+       content: "Welcome to {{ ansible_fqdn}} on {{ ansible_default_ipv4.address }}"
+       dest: /var/www/html/index.html
+       owner: webadm
+       group: web
+       mode: u=rw,g=rw,o=r
+
+- hosts: dbservers
+ become: yes
+ tasks:
+   - name: install MariaDB server
+     yum:
+       name: mariadb-server
+       state: latest
+
+   - name: enable and start MariaDB server
+     service:
+       name: mariadb
+       enabled: yes
+       state: started
+
+- hosts: logservers
+ become: yes
+ tasks:
+   - name: configure rsyslog remote log reception over udp
+     lineinfile:
+       path: /etc/rsyslog.conf
+       line: "{{ item }}"
+       state: present
+     with_items:
+       - '$ModLoad imudp'
+       - '$UDPServerRun 514'
+     notify:
+       - restart rsyslogd
+
+   - name: open firewall port
+     firewalld:
+       port: 514/udp
+       immediate: true
+       permanent: true
+       state: enabled
+
+ handlers:
+   - name: restart rsyslogd
+     service:
+       name: rsyslog
+       state: restarted
+
+- hosts: lamp
+ become: yes
+ tasks:
+   - name: configure rsyslog
+     lineinfile:
+       path: /etc/rsyslog.conf
+       line: '*.* @192.168.102.215:514'
+       state: present
+     notify:
+       - restart rsyslogd
+
+ handlers:
+   - name: restart rsyslogd
+     service:
+       name: rsyslog
+       state: restarted
+       
+       
+       
+       
+ansible-playbook myplaybook.yml
+
+
+
+logger command
+
+ansible-playbook --check myplaybook.yml
+Stepping through a playbook may also be useful:
+
+$ ansible-playbook --step myplaybook.yml
+Similar to a shell script, you can make your Ansible playbook executable and add the following to the top of the file:
+#!/bin/ansible-playbook
+
+
+Use string quoting in playbooks to avoid issues with special characters within a string.
+Logging is disabled by default. To enable logging, use the log_path parameter in the Ansible configuration file.
+
+$ ansible-playbook --syntax-check myplaybook.yml
+
+
+vim ~/.vimrc
+
+https://github.com/pearofducks/ansible-vim
+
+
+
+
+
