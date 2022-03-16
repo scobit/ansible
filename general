@@ -247,10 +247,15 @@ ansible-playbook myplaybook.yml
 
 logger command
 
-ansible-playbook --check myplaybook.yml
-Stepping through a playbook may also be useful:
 
-$ ansible-playbook --step myplaybook.yml
+# -C, --check           don't make any changes; instead, try to predict some of the changes that may occur
+ansible-playbook --check myplaybook.yml
+
+
+one-step-at-a-time: confirm each task before running
+ansible-playbook --step myplaybook.yml
+
+
 Similar to a shell script, you can make your Ansible playbook executable and add the following to the top of the file:
 #!/bin/ansible-playbook
 
@@ -267,5 +272,44 @@ https://github.com/pearofducks/ansible-vim
 
 
 
+#install ansible
+https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installation-guide
+
+By default, Ansible uses native OpenSSH and connects to remote machines using your current user name, just as SSH does
+
+ansible test -m ping -vvvv
+
+
+
+vim hosts
+
+# If you have multiple hosts following a pattern you can specify
+# them like this:
+
+#www[001:006].example.com
+
+#db-[99:101]-node.example.com
+
+
+ansible all -a "echo hello"
+
+[WARNING]: Consider using the file module with state=touch rather than running 'touch'.  If you need to use
+command because file is insufficient you can add 'warn: false' to this command task or set
+'command_warnings=False' in ansible.cfg to get rid of this message.
+
+$ ansible all -m ping -u bruce
+# as bruce, sudoing to root (sudo is default method)
+$ ansible all -m ping -u bruce --become
+# as bruce, sudoing to batman
+$ ansible all -m ping -u bruce --become --become-user batman
+
+
+https://katacoda.com/rhel-labs
+
+
+The default location for inventory is a file called /etc/ansible/hosts. You can specify a different inventory file at the command line using the -i <path> option.
+
+$ ansible atlanta -a "/sbin/reboot" -f 10 -u username --become [--ask-become-pass]
+If you add --ask-become-pass or -K, Ansible prompts you for the password to use for privilege escalation (sudo/su/pfexec/doas/etc).
 
 
