@@ -30,3 +30,82 @@ dbservers
 
 ansible web --list-hosts
 
+FAILED! => {
+    "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+sudo apt install sshpass
+
+
+ansible-doc -l
+
+
+ansible
+
+ansible all -m ping
+
+ansible localhost -m setup
+
+ansible web -m command -a "uptime"
+
+---
+ - name: install and start apache
+   hosts: web
+   vars:
+     http_port:80
+	 max_clients: 200
+   remote_user: root
+
+   tasks:
+   - name: install httpd
+     yum: pkg=httpd state=latest
+   - name: write the apache config file
+     template: src=/srv/httpd.j2 dest=/etc/httpd.conf
+   - name: start httpd
+     service: name=httpd state=started
+   - name: add cache dir
+     file:
+	   path: /opt/cache
+	   state: directory
+   - name: install nginx
+     state: latest
+     notify: restart nginx
+   handlers:
+    - name: restart nginx
+	  service:
+	    name: nginx
+		state: restarted
+
+
+
+vim hosts
+
+db1 ansible_host=192.168.0.1
+db2 ansible_host=hostname
+
+---
+ - name: install telegraf
+   yum:
+     name: telegraf-{{ telegraf_version }}
+	 state: present
+	 update_cache: yes
+	 disable_gpg_check: yes
+	 enablerepo: telegraf
+   notify: restart telegraf
+   
+ - name: configure telegraf
+   template:
+     src: telegraf.conf.j2
+	 dest: /etc/telegraf/telegraf.conf
+   notify: restart telegraf
+   
+ - name: start telegraf
+   service: 
+     name: telegraf
+	 state: started
+	 enabled: yes
+	 
+ansible-playbook playbook.yml --syntax-check
+
+
+ansible all -m ping -u ubuntu --ask-pass
+   	 
+	 
