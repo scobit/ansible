@@ -12,6 +12,9 @@ ansible -i inventory ManagedHostName -m user -a "name=ansible create_home=yes" -
 ```
 ansible -i inventory ManagedHostName -m user -a "name=ansible" -u root -k
 
+ansible -i inventory ManagedHostName -m ansible.builtin.user -a "name=anna state=present"
+
 ansible ManagedHostName -m user -a "name=anna state=present"
+
 ```
 
