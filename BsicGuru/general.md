@@ -500,7 +500,7 @@ This is because of the complex dependency relations that my exist between playbo
 
 The only way to undo a playbook, is writing a playbook that is doing the opposite actions in reversed order.
 
-
+```
 vim failingtask.yaml
 
 ---
@@ -517,7 +517,7 @@ vim failingtask.yaml
       	  
   - debug:
       msg: run me again and see if you get here
-
+```
 
 
 Ansible always works on the return code of a command to determine whether or not something has changed - idempotency is all about and desired state.
@@ -525,7 +525,7 @@ Ansible always works on the return code of a command to determine whether or not
 
  - install, start and enable the vsftpd service on all managed nodes
  - open the firewalld firewall to allow access to this service
-
+```
 ---
 - name: install and run vsftpd
   gather_facts: no
@@ -545,8 +545,28 @@ Ansible always works on the return code of a command to determine whether or not
 	  state: enabled
 	  permanent: yes
 	  immediate: yes 
+```
 
+### DevOps Best Practices
 
+Separating code from site-specific configuration.
 
+Ansible itself is all about configuration as code.
+
+While developing flexible code, you should separate site-specific information from the code, which should be static.
+
+You need to try to maintain a certain obstruction level in code and to keep out very specific information.
+
+Developing dynamic code allows you to use your code on any site.
+
+To provide site-specific code, variables can be used.
+
+Apart from variables, ansible provides facts.
+
+Facts are system properties that are dynamically discovered and can be used as variables.
+
+Fact is a variable, the only difference is that variables in general are defined by the system administrator and ansible facts are discovered on the managed machines.
+
+Separating sire-specific information from static code is also referred to as decoupling.
 
 
