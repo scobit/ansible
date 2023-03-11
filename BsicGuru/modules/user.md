@@ -11,5 +11,7 @@ ansible -i inventory ManagedHostName -m user -a "name=ansible create_home=yes" -
 #### as we use root user we don't need become privileges, so we don't nedd -b and -K
 ```
 ansible -i inventory ManagedHostName -m user -a "name=ansible" -u root -k
+
+ansible ManagedHostName -m user -a "name=anna state=present"
 ```
 
