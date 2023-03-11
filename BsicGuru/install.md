@@ -23,6 +23,12 @@ dnf provides */pip
 yum -y install python3-pip
 
 dnf -y install python3-pip
+
+or
+
+dnf search python | grep pip
+
+yum search python | grep pip
 ```
 
 #### Установка ansible через pip
