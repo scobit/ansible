@@ -210,7 +210,201 @@ we can automate input options like -b - K etc
 
 
 
+### Ad hoc commands versus playbooks
 
+When to use Ad-hoc commands:
+
+In an ad-hoc command, ansible modules are used to perform tasks on managed hosts
+
+ad-hoc command are perfect for running one task on a manageed hosts 
+ 
+ - initial hosts setup
+ - checking configuration on hosts
+ 
+Playbooks are the way to implement more complex taks where dependency relations have to be managed.
+
+
+### Understanding Ansible Modules
+
+An ansible module is a python script that will be executed on the managed host.
+
+Modules can be offered as such (pre Ansible 2.10) or as a part of a collection (Ansible 2.10 and later).
+
+
+### Running ad-hoc commands
+
+Use the ansible command to run ad-hoc commands
+
+While running the ansible command, an inventory must be present, and you must specify which host to address.
+
+We will also use the -m option to address a specific module, and -a for module arguments.
+
+
+FQCN - fully qualified collection names
+
+
+### Understanding Module Names
+
+Before ansible 2.10, modules were referred to just by their name.
+
+Since ansible 2.10, modules are a part of ansible collections.
+
+Collections allow for better management of large amounts of modules.
+
+For compatibility reasons, the old module names can still be used.
+
+
+### Best Practice
+
+Always use the most specific module you can find.
+
+Using generic modules often leads to problems as these don't do well in situations where the desired state already exists.
+
+This is referred to as idempotency: meaning that if the current state already matches the desire state, the module will still work as expected and won't fail.
+
+
+### Understanding Idempotency
+
+Idempotence is a property of operations in mathematics and computer science whereby they can be applied multiple times without changing the result.
+
+Ansbile is about state management and desired result  should be.
+
+In ansible it means that a module should run successfully, where it makes no difference if the current state already meets the desired state or not.
+
+Many ansible modules are idempotent by nature, but some are not.
+
+Avoid using command, shell or raw as they are not idempotent by nature.
+
+
+#### Demo: Expoloring Idempotency
+```
+ansible all -m ping
+
+ansible all -m user -a "name=lisa"
+
+ansible all -m command -a "useradd lisa"
+
+ansible all -m user -a "name=lisa state=absent"
+```
+
+
+
+### Understanding playbooks
+
+Playbooks are used to run multiple tasks in order on multiple hosts.
+
+Playbooks are the way to go to define dependency relations between tasks.
+
+Playbooks can also be used to implement conditional structures, where tasks are only executed if specific conditions are true.
+
+### Understanding playbook Elements
+
+In a playbook, one or more plays are defined.
+
+Each play has a header thet defines different properties, including the hosts on which it has to run.
+
+In a play, one or more tasks are defined.
+
+Playbooks are written in YAML which makes it easy to define relations between parent and child elements.
+
+### Understanding YAML
+
+In YAML, indentation is used to identify the relation between parent and child objects, which are specified as key: value pairs
+
+We may also find old notations, which is key equals value.
+
+With key common value is the prefered notation nowadays
+
+Data elements at the same level in the hierarchy must have the same indentation and that makes it easy to find relation between different resources.
+
+Items that are children (properties_ are indented more than the parents)
+
+If a specific module argument can have multiple values, these values typically start with hyphen - recall those arrays.
+
+Indentation happens using spaces. Using tabs is not allowed.
+
+#### Configure vim for indentation, this is making sure that my indentation is happening using two spaces.
+```
+vim ~/.vimrc
+
+autocmd FileType yaml setlocal ai ts=2 sw=2 et
+```
+
+
+### Understanding playbook elements
+
+The relations are defined using indentation.
+
+Yask properties are defined using key:value pairs.
+
+Most key can have one string value.
+
+Some keys have a list (array) value.
+
+When a list value is defined, each item is identified using a hyphen.
+
+In a playbook you will always start with a play and as a playbook can contain multiple plays - every play is starting with hyphen.
+
+If we want we can create multiple plays. 
+
+That makes sense in particular, if you want to use a couple of different settings.
+
+In a play header you identify the target host.
+
+### Example, first 3 lines - minimum play header
+```
+vim sample.yaml
+---
+- name: myplay
+  hosts: rocky
+  tasks:
+  - name: task1
+    debug:
+	     msg: hello world
+  - name: task2
+    debug:
+	     msg: hello task2  
+
+- name: ubuntusettings
+  hosts: ubuntu
+  tasks:
+  - name: hello ubuntu
+    debug:
+	     msg: hello ubuntu
+```
+
+
+Facts gathering - this is where ansible is going to discover properties of the managed hosts.
+
+We can speed it up by using fact cash.
+
+Fact gathering can be useless in some playbooks.
+
+
+
+### Running playbooks
+
+To run a playbook, the ansible-playbook command is used.
+
+Syntax check is not needed you'll be alerted if anything is wrong with your playbook.
+
+Use -v up to four times for increased verbosity messages.
+
+minus v 2 times will tell you which files is used.
+
+minus v 4 times - complete debugging information about everything. So output messages are printed on the screen.
+
+Be default playbooks do not write any output log only standard output.
+
+Command line version of Ansible also known as Ansible engine.
+
+
+Playbook extensions can be yml and yaml
+
+
+
+--- 
+YAML identifier that is telling your YAML interpreter thet the code is staring here
 
 
 
