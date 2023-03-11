@@ -426,8 +426,24 @@ Most inportant the ansible facts by nature is a huge collection of dictionaries 
 Dictionaries are honestly not as spectacular but in a dictionary we can address the dictionary value specifically.
 
 
+### Understading Magic variables
 
+Magic variables are special reserved system variables 
+ - hostvars - prints all the variables assigned to a host
+ - groups - is about all hosts groups
+ - group_names - prints all names of the host groups
+ - inventory_hostname - the host name as defined in inventory
+ - inventory_hostname_short - the short alternative
+ 
+This metric variables are reserved and we can not redefine them yourself, they have the highest possible priority.
 
+hostvars can be used to address facts or inventory variables from other hosts: {{ hostvars['ansible2']['ansible_facts']['distribution'] }}
+
+groups can be used to list all hosts in an inventory group { % for host in groups['webserver'] %]
+
+group_names has all inventory groups a host is in { % if 'webserver' in group_names % }
+
+inventory_hostname or inventory_hostname_short can be used to address a host as an alternative to ansible_hostname when fact-gathering is disabled
 
 
 
