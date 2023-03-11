@@ -445,10 +445,106 @@ Defining multi-pay playbooks makes sense in the following cases:
 Fact gathering is useful when you are going to use the variables that are gathered by fact gathering.
 
 
+---
+- name: install start and enable httpd
+  gather_facts: false
+  hosts: rocky
+  tasks:
+  - name: install package
+    package:
+	  name: httpd
+	  state: latest
+  - name: start and enable service
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+  - name: open port in firewall
+    firewalld:
+      service: http
+      permanent: yes
+      state: enabled
+      immideate: yes
+
+- name: test httpd accessibility
+  become: False
+  gather_facts: no
+  hosts: localhost
+  tasks: 
+  - name: test httpd access
+    uri: 
+      url: http://rocky	
+      
+      
+
+### Understanding Playbook errors
+
+A play contains a series of tasks.
+
+Task dependencies in general are very important.
+
+If a task fails to run on a specific host, futher execution of tasks in the failing play is aborted on that host.
+
+And there is a reason behind it - the futher tasks normally depend on the previous tasks. So if a previous task is failing it makes no sense to continue and that is why further execution will fail.
+
+#### But we can use this construction, put it in play header
+```
+ignore_errors: True
+```
+
+### Undoing playbook Modifications
+
+There is no easy way to undo modifications that have been applied by a playbook.
+
+This is because of the complex dependency relations that my exist between playbooks.
+
+The only way to undo a playbook, is writing a playbook that is doing the opposite actions in reversed order.
+
+
+vim failingtask.yaml
+
+---
+- name: demonstrate failing tasks
+  gather_facts: no
+  ignore_errors: true | yes
+  hosts: all
+  tasks:
+  - name: creating users the wrong way
+    command: useradd anna 
+  - name: creating users in right way
+    user:
+      name: anna
+      	  
+  - debug:
+      msg: run me again and see if you get here
 
 
 
+Ansible always works on the return code of a command to determine whether or not something has changed - idempotency is all about and desired state.
 
+
+ - install, start and enable the vsftpd service on all managed nodes
+ - open the firewalld firewall to allow access to this service
+
+---
+- name: install and run vsftpd
+  gather_facts: no
+  hosts: rocky
+  tasks:
+  - name: install the package
+    package:
+	  nameL vsftpd
+  - name: run the service
+    service:
+	  name: vsftpd
+	  state: started
+	  enabled: yes
+  - name: open firewall
+    firewalld:
+	  service: ftp
+	  state: enabled
+	  permanent: yes
+	  immediate: yes 
 
 
 
