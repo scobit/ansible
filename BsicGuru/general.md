@@ -406,10 +406,43 @@ Playbook extensions can be yml and yaml
 --- 
 YAML identifier that is telling your YAML interpreter thet the code is staring here
 
+Fact gathering can be turned off, because facts can be used as variables inside your playbook.
+
+Changed means that the desired state is desribed in the playbook did not meet the current state of the managed machine and if change was required.
+
+If the desired state already met with current state then you will see, okay, instead.
+
+Default behavior in errors:
+
+if task execution on a specific host is failing then further task execution on the same host will be skipped.
+
+Fact gathering counts as a task as well.
+
+Running playbook multiple times should give the exact same result.
+
+### Idempotent nature of the playbook
+
+Okay meaning that the managed machine state already met with the desired state and no changes were necessary.
+
+On playbook execution many things happen:
+ - fact gathering
+ - task execution
+ - play recap
+ 
+Notice that a good playbook is written to be idempotent.
 
 
 
+A playbook can define one or more plays.
 
+Defining multi-pay playbooks makes sense in the following cases:
+ - to write the playbook in a modular way
+ - to limit the number of tasks that run in one play
+ - to run same tasks on the host, while others are running on another host
+ - in a play header we can set different variables
+ 
+
+Fact gathering is useful when you are going to use the variables that are gathered by fact gathering.
 
 
 
