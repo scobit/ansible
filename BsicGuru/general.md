@@ -99,4 +99,131 @@ In ansible 2.9 and earlier only the last part of this name is used.
 
 
 
+### Setting up linux managed hosts with ad hoc commands
+
+Hosts requirements:
+ - ssh is running and reachable
+ - hostname are resolved via dns or etc/hosts
+ - create a file with the name inventory
+ - create the ansible user on manged nodes with administrative privileges
+ - include host names in inventory 
+ - set a password for this user
+ - configure ssh key-based login
+ 
+ 
+
+
+#### Openssh install on ubuntu
+```
+apt install openssh-server
+
+systemctl status sshd
+```
+
+Changed true - means that it changed something.
+
+
+By default, every ad-hoc command starts with ansible command.
+
+
+
+
+
+#### Using the local user ansible, create an ssh key pair and press enter to all questions.
+```
+ssh-keygen
+```
+
+#### Use ssh-copy-id to copy the key pairs to the managed nodes
+```
+ssh-copy-id HostName; 
+```
+
+#### Testing
+```
+ansible -i inventory all -m command -a "id" -u ansible
+```
+
+
+#### Ansible Failed. "Using a SSH password instead of a key is not possible because Host Key checking is enabled and sshpass does not support this. Please add this hosts's fingerprint to your known hosts file to mange this host"
+
+If ansible receives a host key fingerprint from a managed host that it doesn't know yet, ansible is going to refuse connection.
+
+#### We can change this through the ansible.cfg or workaround, just 
+
+```
+ssh HostName
+```
+
+Fingerprint - is telling us hey i can't verify the authenticity.The thing is that i don't nedd to login, we need these host keys to be stored.
+
+#### They are stored in 
+```
+.ssh/known_hosts
+```
+
+#### Edit /etc/hosts for hostname resolving, then ping ansible host to check
+```
+vim /etc/hosts
+
+ip	fqdn	hostname
+```
+
+
+
+### Setting up privilege escalation
+
+To securely escalate privileges, use the -b -K command line options.
+
+To conveniently escalate privileges, consider configuring passwordless sudo.
+
+To do so with ansible, , next use the ansible copy module to 
+
+#### Create a sudo configuration file locally
+```
+echo 'ansible ALL=(ALL) NOPASSWD: ALL' > /tmp/sudoers
+```
+
+#### copy configuration file to hosts
+```
+cp /tmp/sudoers /etc/sudoers.d/ansible
+
+ansible ManagedHostName -i inventory -u root -k -m copy -a "src=/etc/sudoers dest=/etc/sudoers.d/ansible"
+
+ansible ManagedHostName -i inventory -u UserName -k -b -K -m copy -a "src=/tmp/sudoers dest=/etc/sudoers.d/ansible"
+
+ansible ManagedHostName -i inventory -u UserName -k -b -K -m file -a "path=/etc/sudoers.d state=directory"
+```
+
+#### test
+```
+ansible -i inventory all -m command -a "ls -l /root"
+
+ansible -i inventory all -m command -a "ls -l /root" -b
+```
+
+#### Ansible Failed. Permission deniednon-zero return code
+
+Means that we make some sudo command wtihout specifing -b even if we have passwordless sudo rights
+
+we can automate input options like -b - K etc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
