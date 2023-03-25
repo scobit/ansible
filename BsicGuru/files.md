@@ -94,3 +94,77 @@ vim copy.yml
 Pipe behind the name of the module, which is making sure that the next couple of lines iw written to the configuration file with this specific layout. Text is wrapped over multiple lines.
 
 The stat module is mostly used in combination with the register
+
+
+
+Lab working with files
+
+write a playbook that is doing the following
+
+Installs vsftpd on all managed hosts
+
+copies the file /etc/vsftpd/vsftpd.conf from one of the managed hosts to the control host
+
+converts that file into a template, adding one line to the end of the file
+# written on {{ ansible_hostname }}
+
+uses the template to create a new version of the configuration file on the managed hosts
+
+ensures that vsftpd is started, enabled and accessible through the firewall
+
+dash - list
+no dash - properties
+
+When do we need a dash to indicate a list and when don't we need it? - we don't need to put arguments to a module
+
+ansible-doc -s ??? check meaning
+
+vim lab7.yml
+---
+ - name: copy conf to local
+   hosts: all
+   tasks:
+   - name: install vsftpd
+	 dnf:
+	   name: vfsftpd
+	   state: latest
+   - name: fetch the file
+	 fetch:
+	   src: /etc/vsftpd/vsftpd.conf
+	   flat: test
+	   dest: /tmp/vsftpd.j2
+		 
+ - name: modify file on control
+   hosts: localhost
+   become: yes
+   tasks:
+    - name: add line to file
+	  lineinfile:
+	    name: /tmp/vsftpd.j2
+		line: '# write on {{ ansible_hostname }}'
+		
+ - name: finish it
+   hosts: all
+   tasks:
+    - name: use template
+	  template:
+	    src: /tmp/vsftpd.j2
+		dest: /etc/vsftpd/vsftpd.conf
+ - name: start it
+   service:
+     name: vsftpd
+	 state: started
+	 enabled: yes
+ - name: open firewall
+   firewalld:
+     service: ftp
+	 immediate: yes
+	 permanent: yes
+	 state: enabled
+	 
+
+
+ansible ansible1 -a "systemctl status vsftpd"
+
+I like to improvise =)
+Let's move on
