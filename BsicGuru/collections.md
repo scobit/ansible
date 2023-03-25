@@ -127,3 +127,63 @@ Modules happen to be plugins as well
 
 ansible-doc ansible.posix
 
+
+
+
+Automation hub is a red hat subscription platform and it's used to work with collections as well
+
+Using collection sources
+
+Community collections are provided through ansible galaxy
+
+Subscription-only collections are through
+https://cloud.redhat.com/ansible/automation-hub
+
+Automation hub contains collections from red hat, but also partnet collections
+
+Go to https://cloud.redhat.com/ansible/automation-hub/token to get an authentication token that is needed for using collections; this token needs to be stored in the ansible.cfg
+
+Using collections from automation hub
+
+Get a token https://cloud.redhat.com/ansible/automation-hub/token
+
+select automation hub - connect to hub and copy the toekn
+
+Edit ansible.cfg to include the galaxy server and token
+
+[galaxy_server.automation.hub]
+url=https://cloud.redhat.com/api/automation-hub/
+auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+token=xxxxxx
+
+[galaxy_server.release_galaxy]
+url=https://galaxy.ansible.com/
+token=xxxxx
+
+
+Using  collections from automation hub
+
+To install collections from automation hub, create a requirements.yml file
+
+collections:
+- name: f5networks.f5_modules
+  source: https://cloud.redhat.com/api/automation-hub/
+
+Install using the requirements file
+
+ansible-galaxy collection install -r collections/requirements.yml
+
+Use ansible-galaxy collections -l to show a list of currently installed collections
+
+  
+
+
+vim requirements.yml
+
+collections:
+  - name: f5networks.f5_modules
+    source: https://cloud.redhat.com/api/automation-hub/
+  - name: ansible.netcommon
+    source: https://galaxy.ansible.com
+  - name: ciscosmb
+    source: https://galaxy.ansible.com
