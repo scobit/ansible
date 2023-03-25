@@ -194,3 +194,104 @@ vim network.yaml
       msg: "{{ '193.179.99.8/27' | ipaddr('range_usable') }}"
 
 
+Understanding filters
+
+A filter is a lookup plugin that allows you to manipulate data
+It's an actual piece of code that you are going to add to your ansible software
+
+Many filters are available in ansible
+
+apart from that, jinja2 filters can be used in ansible
+
+filters process the value of a variable on the control host before further using it in the playbook
+
+while using filters, it is important to know which vaiable type you re dealing with
+
+Understanding variable types
+
+String: sequence of characters - the default variable type in ansible. If we do not use the double quotes with a string in vars definitions, it will be string anyway
+
+Numbers: numeric value, treated as integer or float. When placing a number in quotes it is treated as a string
+
+Booleans: true/false values (yes/no, y/n, on/off also supported)
+
+Dates: calendar dates
+
+Null: undefined variable type
+
+List of arrays: a sorted collection of values
+
+Dictionary or Hash: a collection of key/value pairs
+
+
+Recognizing variable types
+
+In the output of, for instance, fact gathering, different variable types can be recognized by the way in which they are written
+
+String: a value between quotes
+
+Numbers: a value that is not between quotes
+
+Booleans: set in inventory and ansible.cfg
+
+dates: "2021-12-30"
+
+Null: undefined variable type - only occurs on undefined variables
+
+
+
+vim vartypetest.yaml
+---
+- name: test variable types
+  hosts: localhost
+  become: no
+  vars:
+  - car: mercedes
+  - number: 10
+  - sunny: True
+  - rainy: true
+  tasks:
+  - name: testing string
+    debug:
+      msg: car is a string
+    when: car == "mercedes"
+  - name: testing integer
+    debug:
+      msg: number is an integer
+    when: number == 10
+  - name: testing boolean
+    debug:
+      msg: sunny is a boolean
+    when: sunny
+  - name: testng boolean case
+    assert:
+      that: rainy
+      success_msg: rainy is a boolean
+      fail_msg: rainy is not a boolean
+	  
+	  
+List or an array is a sorted collection of values
+
+List - use notation, it's between square brackets
+
+List of Arrays: a sorted collection of values
+
+"ansible_system_capabilities": [
+	"cap_chown",
+	"cap_kill"
+],
+
+The square brackets is what makes it an array
+
+Dictionary - is a key/value pair
+
+The dictionary is written between braces
+
+We can have combitaion of list and dcitionary - like list of dictionaries (eg ansible mounts is the list of dictionaries)
+
+Dictionary or Hash: multiple values, written between braces:
+"ansible_selinux":{
+  "config_mode":"enforcing",
+  "type":"targeted"
+},
+
