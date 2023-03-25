@@ -34,3 +34,79 @@ ansible-galaxy --help
 ansible-galaxy role install geerlingguy.nginx
 
 ansible playbook nginx-role.yml
+
+
+
+Creating your own roles
+
+ansible-galaxy role init RoleName
+
+everything that's not required in role - should be deleted
+
+The roles are supposed to be in the roles directory
+
+vim pretasks.yml
+---
+- name: run a task before a role
+  hosts: all
+  pre_tasks:
+    - name: update yum cache
+      yum:
+        update_cache: yes
+  roles:
+    - motd
+
+
+
+### Nginx role - install nginx, make sure that before using the role, th following is done:
+if installed and running, apache is removed
+Perform an update of all packages
+
+After running the role, remove the yum package cache
+
+Solution:
+
+Always go for the most specific solution
+
+ansible-galaxy role list
+
+sudo -i
+
+Quoting issue 
+Often in ansible can be a quoting issue
+
+ansible-playbook --help
+
+ansible-playbook lab8.yaml --list-tasks
+
+ansible-playbook lab8.yaml --start-at-task file
+
+
+vim lab8.yml
+---
+- name: install nginx
+  hosts: all
+  pre_tasks:
+   - block:
+     - name: remove apache
+	   service:
+	     name: httpd
+		 state: stopped
+		 enabled: no
+     - yum:
+	     name: httpd:
+		 state: absent
+	 - name: perform package update
+	   yum:
+	     name: '*'
+		 state: latest
+     when: ansible_facts['os_family'] == 'RedHat' or ansible_facts['os_family'] == 'Rocky'
+	 
+  roles:
+   - geerlingguy.nginx
+   
+  post_tasks:
+   - file:
+       path: /var/cache/dnf
+	   state: absent
+
