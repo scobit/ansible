@@ -50,37 +50,3 @@ This filter does not changing the contents of variable, it's just changing the i
 Assert, a little bit like block and rescue and always - is just another way of implementing something that looks like an if the else statement
 
 
-####
-
-Using when to make the command module idempotent
-
-Idempotency ensures that running a playbook always gives the same result, no matter the current state of the managed asset. Command, shell and raw module are not idempotent by nature. However if you're using register in a smart way, you can use even these modules in an idempotent way.
-
-Create a playbook that creates a user using the command module in such a way that the playbook is idempotent.
-
-
-If number is not between double quotes means that this is integer
-
-- name: creates user {{ user }}
-  vars:
-    user: linda
-  hosts: ansible2
-  tasks:
-  - name: checkuser
-    command: id {{ user }}
-	register: iduser
-  - name: 
-    debug:
-	  var: iduser
-  - name: beforecheck
-    fail:
-	  msg: user already exists
-	when: iduser.rc == 0
-  - name: create user {{ user }}
-    command: userdd {{ user }}
-	
-- name: continuing
-  hosts: ansible2
-  tasks:
-   - debug:
-       msg: we made it =)
